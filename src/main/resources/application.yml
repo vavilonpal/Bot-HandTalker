@@ -17,7 +17,7 @@ spring:
 
 
 bot:
-  name: HandTalkerBot
+  name: Hand_Talker_Bot
   token: 7921940029:AAFG_dIYhlizkzXxTvhuw18VbdX6uyfJNNY
 
 logging:
