@@ -15,6 +15,11 @@ spring:
     enabled: true
     baseline-on-migrate: true
 
+
+bot:
+  name: HandTalkerBot
+  token: 7921940029:AAFG_dIYhlizkzXxTvhuw18VbdX6uyfJNNY
+
 logging:
   level:
     org:
