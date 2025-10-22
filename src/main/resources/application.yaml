@@ -1,0 +1,23 @@
+spring:
+  application:
+    name: Bot Hand Talker
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/postgres
+    username: bot
+    password: bot
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: none
+    show-sql: true
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+
+logging:
+  level:
+    org:
+      springframework:
+        security: debug
+        web: debug
