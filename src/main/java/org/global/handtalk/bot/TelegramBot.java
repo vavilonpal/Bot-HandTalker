@@ -2,6 +2,7 @@ package org.global.handtalk.bot;
 
 import lombok.RequiredArgsConstructor;
 import org.global.handtalk.service.MessageService;
+import org.global.handtalk.service.VideoNoteService;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.GetFile;
@@ -22,6 +23,7 @@ import java.net.URL;
 public class TelegramBot extends TelegramLongPollingBot {
     private final BotProperties botProperties;
     private final MessageService messageService;
+    private final VideoNoteService videoNoteService;
 
 
     @Override
@@ -30,56 +32,35 @@ public class TelegramBot extends TelegramLongPollingBot {
         textProcess(update);
 
         // ------ VideoNote processing ------------
-
+        videoNoteProcess(update);
 
     }
 
 
-    private void videoNoteProcess(Update update){
+    private void videoNoteProcess(Update update) {
         Message incomeMessage = update.getMessage();
         Long chatId = incomeMessage.getChatId();
 
         if (update.hasMessage() && update.getMessage().hasVideoNote()) {
-            VideoNote videoNote = incomeMessage.getVideoNote();
-            String fileId = videoNote.getFileId();
+            VideoNote videoNote = update.getMessage().getVideoNote();
 
-            String outputDir = "videos/";
-            new java.io.File(outputDir).mkdirs(); // создаст папку если нет
+            videoNoteService.saveVideo(this, videoNote, getBotToken());
+
+            SendMessage msg = new SendMessage(chatId.toString(),
+                    "✅ I received your video note and saved");
+
+
             try {
-                // Step 1: Get file info (to get file path)
-                GetFile getFile = new GetFile(fileId);
-                File file = execute(getFile);
-
-                // Step 2: Download the file from Telegram
-                String fileUrl = "https://api.telegram.org/file/bot" + getBotToken() + "/" + file.getFilePath();
-
-                // Save to local storage
-                String outputFile = outputDir + "video_note_" + fileId + ".mp4";
-                try (InputStream in = new BufferedInputStream(new URL(fileUrl).openStream());
-                     FileOutputStream out = new FileOutputStream(outputFile)) {
-
-                    byte[] buffer = new byte[1024];
-                    int bytesRead;
-                    while ((bytesRead = in.read(buffer)) != -1) {
-                        out.write(buffer, 0, bytesRead);
-                    }
-                }
-
-                // Notify user
-                SendMessage msg = new SendMessage(chatId.toString(),
-                        "✅ I received your video note and saved it as `" + outputFile + "`");
                 execute(msg);
-
             } catch (TelegramApiException e) {
-                e.printStackTrace();
-            } catch (Exception e) {
-                e.printStackTrace();
+                throw new RuntimeException(e);
             }
-
-
         }
+
+
     }
-    private void textProcess(Update update){
+
+    private void textProcess(Update update) {
         Message incomeMessage = update.getMessage();
         Long chatId = incomeMessage.getChatId();
 
@@ -101,6 +82,7 @@ public class TelegramBot extends TelegramLongPollingBot {
                 default -> messageService.sendTextMessage(this, chatId, "❓ Unknown command");
             }
         }
+
     }
 
     @Override
