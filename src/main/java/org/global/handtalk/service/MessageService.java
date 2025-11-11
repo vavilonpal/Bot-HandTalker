@@ -25,8 +25,10 @@ public class MessageService {
         }
     }
 
-    public String sendStartMessage(AbsSender sender, Long chatId, String username) {
-        String answer = "Hi, " + username + ", nice to meet you!" + "\n" +
+    public void sendStartMessage(AbsSender sender, Long chatId, String username) {
+        ReplyKeyboardMarkup keyboard = commandKeyboard();
+
+        String welcomeText = "Hi, " + username + ", nice to meet you!" + "\n" +
                 "This is what I can do:" + "\n" +
                 "1. Translate Sign Language into text." + "\n" +
                 "2. Voice the text and overlay it on the video" + "\n" +
@@ -34,11 +36,15 @@ public class MessageService {
 
 
         SendMessage message = new SendMessage();
-       /* message.setChatId(chatId.toString());
-        message.setText(welcomeText);*/
+        message.setChatId(chatId.toString());
+        message.setText(welcomeText);
         message.setReplyMarkup(keyboard);
 
-
+        try {
+            sender.execute(message);
+        } catch (TelegramApiException e) {
+            e.printStackTrace();
+        }
     }
 
     private ReplyKeyboardMarkup commandKeyboard() {
@@ -50,8 +56,8 @@ public class MessageService {
         List<KeyboardRow> rows = new ArrayList<>();
 
         KeyboardRow firstMainCommandsRow = new KeyboardRow();
-        firstMainCommandsRow.add(new KeyboardButton("/help"));
-        firstMainCommandsRow.add(new KeyboardButton("/info"));
+        firstMainCommandsRow.add(new KeyboardButton("/sign-to-speech"));
+        firstMainCommandsRow.add(new KeyboardButton("/sign-to-text"));
 
         KeyboardRow secondHelpRow = new KeyboardRow();
         secondHelpRow.add(new KeyboardButton("/help"));

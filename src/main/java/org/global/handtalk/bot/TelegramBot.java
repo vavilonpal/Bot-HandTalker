@@ -15,29 +15,37 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 public class TelegramBot  extends TelegramLongPollingBot {
     private final BotProperties botProperties;
     private final MessageService messageService;
+
+
     @Override
     public void onUpdateReceived(Update update) {
-        if (update.hasMessage()) {
-            Message incomeMessage = update.getMessage();
-            Long chatId = incomeMessage.getChatId();
+        if (update.hasMessage() && update.getMessage().hasText()) {
+            String text = update.getMessage().getText();
+            Long chatId = update.getMessage().getChatId();
 
+            switch (text) {
+                //Help commands
+                case "/start" -> messageService.sendStartMessage(this, chatId, update.getMessage().getChat().getUserName());
+                case "/help" -> messageService.sendTextMessage(this, chatId, "ℹ️ Help info...");
+                // Video commands
+                case "/sign-to-speech" -> messageService.sendTextMessage(this, chatId, "Send Video Note!");
+                case "/sign-to-text" -> messageService.sendTextMessage(this, chatId, " Send Video Note!");
+
+                case "/about" -> messageService.sendTextMessage(this, chatId, "🤖 Hand Talker Bot!");
+                case "/settings" -> messageService.sendTextMessage(this, chatId, "🤖 Settings ...");
+
+                default -> messageService.sendTextMessage(this, chatId, "❓ Unknown command");
+            }
+        }
+
+
+
+           /* // ------ VideoNote processing ------------
             if (incomeMessage.hasVideoNote()){
                 VideoNote videoNote = update.getMessage().getVideoNote();
 
-
             }
-            if (incomeMessage.hasText()) {
-                String text = incomeMessage.getText();
-
-                if (text.equals("/start")) {
-                    sendMessage(chatId, messageService.getStartMessage());
-                } else {
-                    sendMessage(chatId, "Unknown command!");
-                }
-            } else {
-                sendMessage(chatId, "Incorrect data format!");
-            }
-        }
+        }*/
     }
 
     /*
