@@ -4,32 +4,43 @@ import lombok.RequiredArgsConstructor;
 import org.global.handtalk.service.MessageService;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
+import org.telegram.telegrambots.meta.api.methods.GetFile;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.objects.File;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.VideoNote;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
+import java.io.BufferedInputStream;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.net.URL;
+
 @Component
 @RequiredArgsConstructor
-public class TelegramBot  extends TelegramLongPollingBot {
+public class TelegramBot extends TelegramLongPollingBot {
     private final BotProperties botProperties;
     private final MessageService messageService;
 
 
     @Override
     public void onUpdateReceived(Update update) {
-        if (update.hasMessage() && update.getMessage().hasText()) {
-            String text = update.getMessage().getText();
-            Long chatId = update.getMessage().getChatId();
+        Message incomeMessage = update.getMessage();
+        Long chatId = incomeMessage.getChatId();
 
+        // ------ Text processing ------------
+        if (update.hasMessage() && incomeMessage.hasText()) {
+            String text = incomeMessage.getText();
             switch (text) {
                 //Help commands
-                case "/start" -> messageService.sendStartMessage(this, chatId, update.getMessage().getChat().getUserName());
+                case "/start" -> messageService.sendStartMessage(this, chatId, incomeMessage.getChat().getUserName());
                 case "/help" -> messageService.sendTextMessage(this, chatId, "ℹ️ Help info...");
+
                 // Video commands
                 case "/sign-to-speech" -> messageService.sendTextMessage(this, chatId, "Send Video Note!");
                 case "/sign-to-text" -> messageService.sendTextMessage(this, chatId, " Send Video Note!");
+
 
                 case "/about" -> messageService.sendTextMessage(this, chatId, "🤖 Hand Talker Bot!");
                 case "/settings" -> messageService.sendTextMessage(this, chatId, "🤖 Settings ...");
@@ -38,14 +49,46 @@ public class TelegramBot  extends TelegramLongPollingBot {
             }
         }
 
+        // ------ VideoNote processing ------------
+        if (update.hasMessage() && incomeMessage.hasVideoNote()) {
+            VideoNote videoNote = incomeMessage.getVideoNote();
+            String fileId = videoNote.getFileId();
 
 
-           /* // ------ VideoNote processing ------------
-            if (incomeMessage.hasVideoNote()){
-                VideoNote videoNote = update.getMessage().getVideoNote();
+            try {
+                // Step 1: Get file info (to get file path)
+                GetFile getFile = new GetFile(fileId);
+                File file = execute(getFile);
 
+                // Step 2: Download the file from Telegram
+                String fileUrl = "https://api.telegram.org/file/bot" + getBotToken() + "/" + file.getFilePath();
+
+                // Save to local storage
+                String outputFile = "video_note_" + fileId + ".mp4";
+                try (InputStream in = new BufferedInputStream(new URL(fileUrl).openStream());
+                     FileOutputStream out = new FileOutputStream(outputFile)) {
+
+                    byte[] buffer = new byte[1024];
+                    int bytesRead;
+                    while ((bytesRead = in.read(buffer)) != -1) {
+                        out.write(buffer, 0, bytesRead);
+                    }
+                }
+
+                // Notify user
+                SendMessage msg = new SendMessage(chatId.toString(),
+                        "✅ I received your video note and saved it as `" + outputFile + "`");
+                execute(msg);
+
+            } catch (TelegramApiException e) {
+                e.printStackTrace();
+            } catch (Exception e) {
+                e.printStackTrace();
             }
-        }*/
+
+
+        }
+
     }
 
     /*
