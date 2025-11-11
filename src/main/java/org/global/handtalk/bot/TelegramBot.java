@@ -26,35 +26,25 @@ public class TelegramBot extends TelegramLongPollingBot {
 
     @Override
     public void onUpdateReceived(Update update) {
+        // ------ Text processing ------------
+        textProcess(update);
+
+        // ------ VideoNote processing ------------
+
+
+    }
+
+
+    private void videoNoteProcess(Update update){
         Message incomeMessage = update.getMessage();
         Long chatId = incomeMessage.getChatId();
 
-        // ------ Text processing ------------
-        if (update.hasMessage() && incomeMessage.hasText()) {
-            String text = incomeMessage.getText();
-            switch (text) {
-                //Help commands
-                case "/start" -> messageService.sendStartMessage(this, chatId, incomeMessage.getChat().getUserName());
-                case "/help" -> messageService.sendTextMessage(this, chatId, "ℹ️ Help info...");
-
-                // Video commands
-                case "/sign-to-speech" -> messageService.sendTextMessage(this, chatId, "Send Video Note!");
-                case "/sign-to-text" -> messageService.sendTextMessage(this, chatId, " Send Video Note!");
-
-
-                case "/about" -> messageService.sendTextMessage(this, chatId, "🤖 Hand Talker Bot!");
-                case "/settings" -> messageService.sendTextMessage(this, chatId, "🤖 Settings ...");
-
-                default -> messageService.sendTextMessage(this, chatId, "❓ Unknown command");
-            }
-        }
-
-        // ------ VideoNote processing ------------
-        if (update.hasMessage() && incomeMessage.hasVideoNote()) {
+        if (update.hasMessage() && update.getMessage().hasVideoNote()) {
             VideoNote videoNote = incomeMessage.getVideoNote();
             String fileId = videoNote.getFileId();
 
-
+            String outputDir = "videos/";
+            new java.io.File(outputDir).mkdirs(); // создаст папку если нет
             try {
                 // Step 1: Get file info (to get file path)
                 GetFile getFile = new GetFile(fileId);
@@ -64,7 +54,7 @@ public class TelegramBot extends TelegramLongPollingBot {
                 String fileUrl = "https://api.telegram.org/file/bot" + getBotToken() + "/" + file.getFilePath();
 
                 // Save to local storage
-                String outputFile = "video_note_" + fileId + ".mp4";
+                String outputFile = outputDir + "video_note_" + fileId + ".mp4";
                 try (InputStream in = new BufferedInputStream(new URL(fileUrl).openStream());
                      FileOutputStream out = new FileOutputStream(outputFile)) {
 
@@ -88,21 +78,28 @@ public class TelegramBot extends TelegramLongPollingBot {
 
 
         }
-
     }
+    private void textProcess(Update update){
+        Message incomeMessage = update.getMessage();
+        Long chatId = incomeMessage.getChatId();
 
-    /*
-     * On every message we must set chat id
-     * */
-    private void sendMessage(Long chatId, String messageToSend) {
-        SendMessage message = new SendMessage();
-        message.setChatId(String.valueOf(chatId));
-        message.setText(messageToSend);
+        if (update.hasMessage() && incomeMessage.hasText()) {
+            String text = incomeMessage.getText();
+            switch (text) {
+                //Help commands
+                case "/start" -> messageService.sendStartMessage(this, chatId, incomeMessage.getChat().getUserName());
+                case "/help" -> messageService.sendTextMessage(this, chatId, "ℹ️ Help info...");
 
-        try {
-            execute(message);
-        } catch (TelegramApiException e) {
-            throw new RuntimeException(e);
+                // Video commands
+                case "/sign-to-speech" -> messageService.sendTextMessage(this, chatId, "Send Video Note!");
+                case "/sign-to-text" -> messageService.sendTextMessage(this, chatId, " Send Video Note!");
+
+
+                case "/about" -> messageService.sendTextMessage(this, chatId, "🤖 Hand Talker Bot!");
+                case "/settings" -> messageService.sendTextMessage(this, chatId, "🤖 Settings ...");
+
+                default -> messageService.sendTextMessage(this, chatId, "❓ Unknown command");
+            }
         }
     }
 
