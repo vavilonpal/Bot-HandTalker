@@ -18,7 +18,7 @@ spring:
 
 bot:
   name: Hand_Talker_Bot
-  token: 7921940029:AAFG_dIYhlizkzXxTvhuw18VbdX6uyfJNNY
+  token: ${TELEGRAM_TOKEN}
 
 logging:
   level:

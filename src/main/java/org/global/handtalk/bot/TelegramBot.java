@@ -1,32 +1,36 @@
 package org.global.handtalk.bot;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
+import org.global.handtalk.service.MessageService;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
+import org.telegram.telegrambots.meta.api.objects.VideoNote;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 @Component
 @RequiredArgsConstructor
 public class TelegramBot  extends TelegramLongPollingBot {
     private final BotProperties botProperties;
-
+    private final MessageService messageService;
     @Override
     public void onUpdateReceived(Update update) {
         if (update.hasMessage()) {
             Message incomeMessage = update.getMessage();
             Long chatId = incomeMessage.getChatId();
 
+            if (incomeMessage.hasVideoNote()){
+                VideoNote videoNote = update.getMessage().getVideoNote();
+
+
+            }
             if (incomeMessage.hasText()) {
                 String text = incomeMessage.getText();
 
                 if (text.equals("/start")) {
-                    sendMessage(chatId, "I'm working");
-                } else if (text.equals("/oladia")) {
-                    sendMessage(chatId, "Привет пупсик ;)");
+                    sendMessage(chatId, messageService.getStartMessage());
                 } else {
                     sendMessage(chatId, "Unknown command!");
                 }

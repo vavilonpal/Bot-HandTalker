@@ -1,2 +1,4 @@
-package org.global.handtalk.service;public class VideoDownloaderService {
+package org.global.handtalk.service;
+
+public class VideoDownloaderService {
 }

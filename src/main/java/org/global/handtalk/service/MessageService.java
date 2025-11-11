@@ -8,8 +8,8 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 @Service
 public class MessageService {
 
-    public void startMessage(Long chatId) {
-        String commands = """
+    public String getStartMessage() {
+        return """
                 👋 Welcome to my bot! Here are available commands:
 
                 /help - Show help
@@ -17,10 +17,5 @@ public class MessageService {
                 /settings - Change your preferences
                 /about - Learn about this bot
                 """;
-
-        SendMessage message = new SendMessage();
-        message.setChatId(chatId.toString());
-        message.setText(commands);
-
     }
 }
